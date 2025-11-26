@@ -1,0 +1,320 @@
+{
+    "info": {
+        "name": "Chess Stats API",
+        "_postman_id": "chess-stats-api-collection",
+        "description": "Complete API collection for Chess Stats API - fetches player data from Chess.com",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "variable": [
+        {
+            "key": "baseUrl",
+            "value": "http://localhost:3000",
+            "type": "string"
+        }
+    ],
+    "item": [
+        {
+            "name": "Health & Info",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/health",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "health"
+                            ]
+                        },
+                        "description": "Check if the API server is running and healthy"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "API Documentation",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                ""
+                            ]
+                        },
+                        "description": "Get API documentation with all available endpoints"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Player Profile",
+            "item": [
+                {
+                    "name": "Get Magnus Carlsen Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/player/magnuscarlsen",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "player",
+                                "magnuscarlsen"
+                            ]
+                        },
+                        "description": "Get Magnus Carlsen's Chess.com profile information"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Hikaru Nakamura Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/player/hikaru",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "player",
+                                "hikaru"
+                            ]
+                        },
+                        "description": "Get Hikaru Nakamura's Chess.com profile information"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Fabiano Caruana Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/player/fabianocaruana",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "player",
+                                "fabianocaruana"
+                            ]
+                        },
+                        "description": "Get Fabiano Caruana's Chess.com profile information"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Gukesh Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/player/ghandeevam2003",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "player",
+                                "ghandeevam2003"
+                            ]
+                        },
+                        "description": "Get Gukesh D's Chess.com profile information"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Custom Player Profile",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/player/:username",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "player",
+                                ":username"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "username",
+                                    "value": "magnuscarlsen",
+                                    "description": "Chess.com username"
+                                }
+                            ]
+                        },
+                        "description": "Get any player's profile by username (replace :username)"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Player Statistics",
+            "item": [
+                {
+                    "name": "Get Magnus Carlsen Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/player/magnuscarlsen/stats",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "player",
+                                "magnuscarlsen",
+                                "stats"
+                            ]
+                        },
+                        "description": "Get Magnus Carlsen's detailed game statistics (blitz, rapid, bullet, etc.)"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Hikaru Nakamura Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/player/hikaru/stats",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "player",
+                                "hikaru",
+                                "stats"
+                            ]
+                        },
+                        "description": "Get Hikaru Nakamura's detailed game statistics"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Fabiano Caruana Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/player/fabianocaruana/stats",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "player",
+                                "fabianocaruana",
+                                "stats"
+                            ]
+                        },
+                        "description": "Get Fabiano Caruana's detailed game statistics"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Alireza Firouzja Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/player/firouzja2003/stats",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "player",
+                                "firouzja2003",
+                                "stats"
+                            ]
+                        },
+                        "description": "Get Alireza Firouzja's detailed game statistics"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Custom Player Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/player/:username/stats",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "player",
+                                ":username",
+                                "stats"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "username",
+                                    "value": "hikaru",
+                                    "description": "Chess.com username"
+                                }
+                            ]
+                        },
+                        "description": "Get any player's statistics by username (replace :username)"
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Error Testing",
+            "item": [
+                {
+                    "name": "Invalid Username",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/player/thisuserdoesnotexist123456",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "player",
+                                "thisuserdoesnotexist123456"
+                            ]
+                        },
+                        "description": "Test error handling with an invalid username"
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Invalid Route",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/invalid/route",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "invalid",
+                                "route"
+                            ]
+                        },
+                        "description": "Test 404 error handling with invalid route"
+                    },
+                    "response": []
+                }
+            ]
+        }
+    ]
+}

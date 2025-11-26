@@ -8,11 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "@/components/ui/avatar"
 import FloatingDockDemo from "@/components/floating-dock-demo"
 import StatsGrid from "@/components/stats-grid"
 
@@ -30,9 +25,10 @@ function App() {
     if (!username) return
 
     try {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
       const endpoint = mode === "stats"
-        ? `http://localhost:3000/player/${username}/stats`
-        : `http://localhost:3000/player/${username}`
+        ? `${apiUrl}/player/${username}/stats`
+        : `${apiUrl}/player/${username}`
 
       const response = await fetch(endpoint)
       if (!response.ok) {
