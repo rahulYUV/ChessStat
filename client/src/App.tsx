@@ -191,7 +191,8 @@ function App() {
             borderRadius="0.75rem"
             onClick={() => fetchData()}
             disabled={loading}
-            className="bg-black dark:bg-white text-white dark:text-black border-neutral-200 dark:border-slate-800 font-semibold"
+            type="button"
+            className="bg-black dark:bg-white text-white dark:text-black border-neutral-200 dark:border-slate-800 font-semibold relative z-20"
             containerClassName="h-12 w-full md:w-40"
           >
             {loading ? "Loading..." : "Analyze"}
