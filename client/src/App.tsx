@@ -69,7 +69,7 @@ function App() {
 
       const response = await fetch(endpoint)
       if (!response.ok) {
-        throw new Error(`Error: ${response.statusText}`)
+        throw new Error(`Error: ${response.status} ${response.statusText}`)
       }
       const result = await response.json()
       setData(result)
