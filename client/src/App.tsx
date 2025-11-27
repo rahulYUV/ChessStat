@@ -18,6 +18,8 @@ import { Search, ChevronDown, ChevronUp, User, Activity, Swords, Lightbulb } fro
 import type { PlayerData, ComparisonData } from "@/types"
 import AvatarGroupPopularityIndicatorDemo from "@/components/shadcn-studio/avatar/avatar-21"
 import ChartAreaInteractive from "@/components/chart-area-interactive"
+import { FeedbackForm } from "@/components/feedback-form"
+import { StatsSkeleton } from "@/components/stats-skeleton"
 
 function App() {
   const [username, setUsername] = useState("")
@@ -121,7 +123,7 @@ function App() {
             Chess Stats
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Analyze player performance with style
+            Dive deep into player stats, compare with others, and uncover key insights :;
           </p>
         </motion.div>
 
@@ -210,7 +212,18 @@ function App() {
         )}
 
         <AnimatePresence mode="wait">
-          {data && (
+          {loading ? (
+            <motion.div
+              key="skeleton"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="w-full max-w-6xl"
+            >
+              <StatsSkeleton />
+            </motion.div>
+          ) : data ? (
             <motion.div
               key={mode}
               initial={{ opacity: 0, y: 20 }}
@@ -358,15 +371,18 @@ function App() {
                 )}
               </AnimatePresence>
             </motion.div>
-          )}
+          ) : null}
         </AnimatePresence>
 
-        <div className="mt-auto w-full py-6 flex justify-center z-50">
-          <FloatingDockDemo onPlayerSelect={handlePlayerSelect} />
-        </div>
+        <div className="mt-auto w-full py-6 flex flex-col items-end gap-8 z-50 px-4 md:px-8">
+          <div className="w-full flex justify-center">
+            <FloatingDockDemo onPlayerSelect={handlePlayerSelect} />
+          </div>
 
-        <div className="fixed bottom-4 left-4 z-50 hidden md:block">
-          <AvatarGroupPopularityIndicatorDemo />
+          <div className="flex flex-col gap-4 items-end">
+            <AvatarGroupPopularityIndicatorDemo />
+            <FeedbackForm />
+          </div>
         </div>
       </div>
     </GridBackground >

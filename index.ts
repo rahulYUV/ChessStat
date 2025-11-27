@@ -1,7 +1,13 @@
 import express, { Request, Response } from "express";
 import cors from "cors";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
 
 import ChessWebAPI from "chess-web-api";
+
+dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -10,6 +16,52 @@ const chessAPI = new ChessWebAPI();
 
 app.use(cors());
 app.use(express.json());
+
+// MongoDB Connection
+const MONGODB_URI = process.env.MONGODB_URI || "";
+
+if (!MONGODB_URI) {
+    console.warn("MongoDB URI is missing. Comments will not be saved.");
+} else {
+    mongoose.connect(MONGODB_URI)
+        .then(() => console.log("Connected to MongoDB"))
+        .catch((err) => console.error("MongoDB connection error:", err));
+}
+
+// Comment Schema
+const commentSchema = new mongoose.Schema({
+    text: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+
+const Comment = mongoose.model("Comment", commentSchema);
+
+app.post("/comments", async (req: Request, res: Response) => {
+    try {
+        const { comment } = req.body;
+        if (!comment) {
+            return res.status(400).json({ error: "Comment is required" });
+        }
+
+        // 1. Save to MongoDB
+        const newComment = new Comment({ text: comment });
+        await newComment.save();
+
+        // 2. Save to comment.txt (Local File)
+        const logEntry = `${new Date().toISOString()}: ${comment}\n`;
+        const filePath = path.join(__dirname, "comment.txt");
+
+        // We use appendFile asynchronously but don't await it to avoid blocking response
+        fs.appendFile(filePath, logEntry, (err) => {
+            if (err) console.error("Error writing to local file:", err);
+        });
+
+        res.json({ message: "Comment saved successfully" });
+    } catch (error) {
+        console.error("Error saving comment:", error);
+        res.status(500).json({ error: "Failed to save comment" });
+    }
+});
 
 
 const handleError = (res: Response, error: any) => {

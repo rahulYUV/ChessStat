@@ -29,7 +29,7 @@ const AvatarGroupPopularityIndicatorDemo = () => {
         <div className='bg-background flex flex-wrap items-center justify-center rounded-full border p-2 shadow-sm'>
             <div className='flex -space-x-3'>
                 {avatars.map((avatar, index) => (
-                    <Avatar key={index} className='ring-background size-12 ring-2'>
+                    <Avatar key={index} className='ring-background size-9 ring-2'>
                         <AvatarImage src={avatar.src} alt={avatar.name} />
                         <AvatarFallback className='text-sm'>{avatar.fallback}</AvatarFallback>
                     </Avatar>
