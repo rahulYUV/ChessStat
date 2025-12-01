@@ -111,6 +111,32 @@ app.get("/visit", async (req: Request, res: Response) => {
 });
 
 
+
+// Helper for limited concurrency
+async function mapWithConcurrency<T, R>(
+    items: T[],
+    concurrency: number,
+    fn: (item: T) => Promise<R>
+): Promise<R[]> {
+    const results = new Array(items.length);
+    let index = 0;
+
+    async function worker() {
+        while (index < items.length) {
+            const i = index++;
+            try {
+                results[i] = await fn(items[i]);
+            } catch (e) {
+                console.error(`Error in concurrency worker for item ${i}:`, e);
+                results[i] = null as any;
+            }
+        }
+    }
+
+    await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }).map(worker));
+    return results;
+}
+
 const handleError = (res: Response, error: any) => {
     const statusCode = error.statusCode || 500;
     const message = error.body || error.message || "Internal Server Error";
@@ -284,15 +310,15 @@ const getRatingHistory = async (username: string) => {
 
         const last12 = monthlyArchives.slice(-12);
 
-        const history = await Promise.all(last12.map(async (url: string) => {
+        const history = (await mapWithConcurrency(last12, 3, async (url: string) => {
             try {
                 const res = await fetch(url);
+                if (!res.ok) return null;
                 const data = await res.json();
                 const games = data.games || [];
 
                 const rapidGames = games.filter((g: any) => g.rules === 'chess' && g.time_class === 'rapid');
                 if (rapidGames.length === 0) return null;
-
 
                 const lastGame = rapidGames[rapidGames.length - 1];
                 const isWhite = lastGame.white.username.toLowerCase() === username.toLowerCase();
@@ -303,11 +329,12 @@ const getRatingHistory = async (username: string) => {
 
                 return { date, rating };
             } catch (e) {
+                console.error(`Error processing archive ${url}:`, e);
                 return null;
             }
-        }));
+        })).filter((h): h is { date: string, rating: number } => h !== null);
 
-        return history.filter((h: any) => h !== null);
+        return history;
     } catch (e) {
         console.error("Error fetching history for", username, e);
         return [];
@@ -393,16 +420,19 @@ app.get("/player/:id/insights", async (req: Request, res: Response) => {
             const last12Months = monthlyArchives.slice(-12);
 
 
-            const gamesResults = await Promise.all(
-                last12Months.map((url: string) =>
-                    fetch(url)
-                        .then(res => res.json())
-                        .catch(err => {
-                            console.error(`Error fetching archive ${url}:`, err);
-                            return { games: [] };
-                        })
-                )
-            );
+            const gamesResults = (await mapWithConcurrency(last12Months, 3, async (url: string) => {
+                try {
+                    const res = await fetch(url);
+                    if (!res.ok) {
+                        console.error(`Failed to fetch archive ${url}: ${res.status} ${res.statusText}`);
+                        return { games: [] };
+                    }
+                    return await res.json();
+                } catch (err) {
+                    console.error(`Error fetching archive ${url}:`, err);
+                    return { games: [] };
+                }
+            })).filter(g => g !== null);
 
             const allGames = gamesResults.flatMap((data: any) => data.games || []);
 

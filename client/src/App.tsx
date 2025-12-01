@@ -20,6 +20,7 @@ import AvatarGroupPopularityIndicatorDemo from "@/components/shadcn-studio/avata
 import ChartAreaInteractive from "@/components/chart-area-interactive"
 import { FeedbackForm } from "@/components/feedback-form"
 import { StatsSkeleton } from "@/components/stats-skeleton"
+import { StatsReceipt } from "@/components/stats-receipt"
 
 function App() {
   const [username, setUsername] = useState("")
@@ -319,6 +320,10 @@ function App() {
                           </div>
                         </div>
                       )}
+
+                      <div className="w-full pt-6 mt-4 border-t border-neutral-200 dark:border-neutral-800">
+                        <StatsReceipt data={data as PlayerData} />
+                      </div>
                     </div>
                   </div>
 
