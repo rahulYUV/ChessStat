@@ -214,14 +214,14 @@ app.get("/player/:id/stats", async (req: Request, res: Response) => {
         }
 
         const data = await getOrSetCache(`stats-${id}`, async () => {
-            const [stats, history] = await Promise.all([
+            const [stats, historyData] = await Promise.all([
                 chessAPI.getPlayerStats(id),
                 getRatingHistory(id)
             ]);
 
             return {
                 ...processData(stats.body),
-                history
+                history: historyData.history
             };
         });
 
@@ -249,13 +249,14 @@ app.get("/player/:id/full", async (req: Request, res: Response) => {
                 console.warn(`Failed to fetch clubs for ${id}`, e);
             }
 
-            const history = await getRatingHistory(id);
+            const { history, games } = await getRatingHistory(id);
 
             return processData({
                 ...player.body,
                 stats: stats.body,
                 clubs: clubs.body.clubs,
-                history
+                history,
+                games // Include games for detailed charts
             });
         });
 
@@ -305,12 +306,12 @@ const getRatingHistory = async (username: string) => {
     try {
         const archives = await chessAPI.getPlayerMonthlyArchives(username);
         const monthlyArchives = archives.body.archives;
-        if (!monthlyArchives || monthlyArchives.length === 0) return [];
+        if (!monthlyArchives || monthlyArchives.length === 0) return { history: [], games: [] };
 
 
         const last12 = monthlyArchives.slice(-12);
 
-        const history = (await mapWithConcurrency(last12, 3, async (url: string) => {
+        const rawResults = await mapWithConcurrency(last12, 3, async (url: string) => {
             try {
                 const res = await fetch(url);
                 if (!res.ok) return null;
@@ -318,26 +319,40 @@ const getRatingHistory = async (username: string) => {
                 const games = data.games || [];
 
                 const rapidGames = games.filter((g: any) => g.rules === 'chess' && g.time_class === 'rapid');
-                if (rapidGames.length === 0) return null;
+                // Return games even if no rapid history point, though history point logic requires rapid games
 
-                const lastGame = rapidGames[rapidGames.length - 1];
-                const isWhite = lastGame.white.username.toLowerCase() === username.toLowerCase();
-                const rating = isWhite ? lastGame.white.rating : lastGame.black.rating;
+                let historyPoint: { date: string, rating: number } | null = null;
+                if (rapidGames.length > 0) {
+                    const lastGame = rapidGames[rapidGames.length - 1];
+                    const isWhite = lastGame.white.username.toLowerCase() === username.toLowerCase();
+                    const rating = isWhite ? lastGame.white.rating : lastGame.black.rating;
 
-                const dateObj = new Date(lastGame.end_time * 1000);
-                const date = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-01`;
+                    const dateObj = new Date(lastGame.end_time * 1000);
+                    const date = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-01`;
+                    historyPoint = { date, rating };
+                }
 
-                return { date, rating };
+                return { historyPoint, games };
             } catch (e) {
                 console.error(`Error processing archive ${url}:`, e);
                 return null;
             }
-        })).filter((h): h is { date: string, rating: number } => h !== null);
+        });
 
-        return history;
+        const validResults = rawResults.filter((r): r is { historyPoint: { date: string; rating: number } | null; games: any[] } => r !== null);
+
+        // Extract history points
+        const history = validResults
+            .map(r => r.historyPoint)
+            .filter((h): h is { date: string, rating: number } => h !== null);
+
+        // Extract all games
+        const games = validResults.flatMap(r => r.games);
+
+        return { history, games };
     } catch (e) {
         console.error("Error fetching history for", username, e);
-        return [];
+        return { history: [], games: [] };
     }
 };
 
@@ -351,11 +366,14 @@ app.get("/compare/:p1/:p2", async (req: Request, res: Response) => {
         const data = await getOrSetCache(`compare-${p1}-${p2}`, async () => {
             const p1Profile = await chessAPI.getPlayer(p1);
             const p1Stats = await chessAPI.getPlayerStats(p1);
-            const p1History = await getRatingHistory(p1);
+            const p1HistoryData = await getRatingHistory(p1);
 
             const p2Profile = await chessAPI.getPlayer(p2);
             const p2Stats = await chessAPI.getPlayerStats(p2);
-            const p2History = await getRatingHistory(p2);
+            const p2HistoryData = await getRatingHistory(p2);
+
+            const p1History = p1HistoryData.history;
+            const p2History = p2HistoryData.history;
 
             const p1Data = [p1Profile, p1Stats];
             const p2Data = [p2Profile, p2Stats];

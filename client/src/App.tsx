@@ -21,6 +21,7 @@ import ChartAreaInteractive from "@/components/chart-area-interactive"
 import { FeedbackForm } from "@/components/feedback-form"
 import { StatsSkeleton } from "@/components/stats-skeleton"
 import { StatsReceipt } from "@/components/stats-receipt"
+import { WhatWeDo } from "@/components/what-we-do"
 
 function App() {
   const [username, setUsername] = useState("")
@@ -124,7 +125,7 @@ function App() {
             Chess Stats
           </h1>
           <p className="text-muted-foreground text-sm md:text-base">
-            Dive deep into player stats, compare with others, and uncover key insights :;
+            Dive deep into player stats, compare with others, and uncover key insights.
           </p>
         </motion.div>
 
@@ -329,7 +330,7 @@ function App() {
 
                   <div className="md:col-span-2 space-y-6">
                     <div className="bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-3xl p-1 border border-black/5 dark:border-white/5">
-                      <StatsGrid data={(data as PlayerData).stats || (data as PlayerData)} />
+                      <StatsGrid data={data as PlayerData} />
                     </div>
                   </div>
                 </div>
@@ -379,9 +380,15 @@ function App() {
           ) : null}
         </AnimatePresence>
 
+
+
         <div className="mt-auto w-full py-6 flex flex-col items-end gap-8 z-50 px-4 md:px-8">
           <div className="w-full flex justify-center">
             <FloatingDockDemo onPlayerSelect={handlePlayerSelect} />
+          </div>
+
+          <div className="w-full">
+            <WhatWeDo />
           </div>
 
           <div className="flex flex-col gap-2 items-end">

@@ -7,7 +7,9 @@ interface StatsGridProps {
     data: any;
 }
 
-export default function StatsGrid({ data }: StatsGridProps) {
+export default function StatsGrid({ data: rawData }: StatsGridProps) {
+    const stats = rawData.stats || rawData;
+
     return (
         <ul className="grid grid-cols-1 grid-rows-none gap-4 md:grid-cols-12 md:grid-rows-3 lg:gap-4 xl:max-h-[34rem] xl:grid-rows-2">
             <GridItem
@@ -16,12 +18,12 @@ export default function StatsGrid({ data }: StatsGridProps) {
                 title="Rapid"
                 description={
                     <div className="flex flex-col gap-1">
-                        <span className="text-2xl font-bold">{data.chess_rapid?.last?.rating || ''}</span>
-                        <span className="text-sm text-muted-foreground">Best: {data.chess_rapid?.best?.rating || '-'}</span>
+                        <span className="text-2xl font-bold">{stats.chess_rapid?.last?.rating || ''}</span>
+                        <span className="text-sm text-muted-foreground">Best: {stats.chess_rapid?.best?.rating || '-'}</span>
                         <div className="text-xs flex gap-2 mt-1">
-                            <span className="text-green-500">W: {data.chess_rapid?.record?.win || 0}</span>
-                            <span className="text-red-500">L: {data.chess_rapid?.record?.loss || 0}</span>
-                            <span className="text-gray-500">D: {data.chess_rapid?.record?.draw || 0}</span>
+                            <span className="text-green-500">W: {stats.chess_rapid?.record?.win || 0}</span>
+                            <span className="text-red-500">L: {stats.chess_rapid?.record?.loss || 0}</span>
+                            <span className="text-gray-500">D: {stats.chess_rapid?.record?.draw || 0}</span>
                         </div>
                     </div>
                 }
@@ -33,12 +35,12 @@ export default function StatsGrid({ data }: StatsGridProps) {
                 title="Blitz"
                 description={
                     <div className="flex flex-col gap-1">
-                        <span className="text-2xl font-bold">{data.chess_blitz?.last?.rating || ''}</span>
-                        <span className="text-sm text-muted-foreground">Best: {data.chess_blitz?.best?.rating || '-'}</span>
+                        <span className="text-2xl font-bold">{stats.chess_blitz?.last?.rating || ''}</span>
+                        <span className="text-sm text-muted-foreground">Best: {stats.chess_blitz?.best?.rating || '-'}</span>
                         <div className="text-xs flex gap-2 mt-1">
-                            <span className="text-green-500">W: {data.chess_blitz?.record?.win || 0}</span>
-                            <span className="text-red-500">L: {data.chess_blitz?.record?.loss || 0}</span>
-                            <span className="text-gray-500">D: {data.chess_blitz?.record?.draw || 0}</span>
+                            <span className="text-green-500">W: {stats.chess_blitz?.record?.win || 0}</span>
+                            <span className="text-red-500">L: {stats.chess_blitz?.record?.loss || 0}</span>
+                            <span className="text-gray-500">D: {stats.chess_blitz?.record?.draw || 0}</span>
                         </div>
                     </div>
                 }
@@ -50,12 +52,12 @@ export default function StatsGrid({ data }: StatsGridProps) {
                 title="Bullet"
                 description={
                     <div className="flex flex-col gap-1">
-                        <span className="text-2xl font-bold">{data.chess_bullet?.last?.rating || ''}</span>
-                        <span className="text-sm text-muted-foreground">Best: {data.chess_bullet?.best?.rating || '-'}</span>
+                        <span className="text-2xl font-bold">{stats.chess_bullet?.last?.rating || ''}</span>
+                        <span className="text-sm text-muted-foreground">Best: {stats.chess_bullet?.best?.rating || '-'}</span>
                         <div className="text-xs flex gap-2 mt-1">
-                            <span className="text-green-500">W: {data.chess_bullet?.record?.win || 0}</span>
-                            <span className="text-red-500">L: {data.chess_bullet?.record?.loss || 0}</span>
-                            <span className="text-gray-500">D: {data.chess_bullet?.record?.draw || 0}</span>
+                            <span className="text-green-500">W: {stats.chess_bullet?.record?.win || 0}</span>
+                            <span className="text-red-500">L: {stats.chess_bullet?.record?.loss || 0}</span>
+                            <span className="text-gray-500">D: {stats.chess_bullet?.record?.draw || 0}</span>
                         </div>
                     </div>
                 }
@@ -66,12 +68,28 @@ export default function StatsGrid({ data }: StatsGridProps) {
                 icon={<Trophy className="h-4 w-4 text-black dark:text-neutral-400" />}
                 title="Total Games"
                 description={
-                    <div className="text-lg">
-                        Total games played across all formats: <span className="font-bold">
-                            {(data.chess_rapid?.record?.win || 0) + (data.chess_rapid?.record?.loss || 0) + (data.chess_rapid?.record?.draw || 0) +
-                                (data.chess_blitz?.record?.win || 0) + (data.chess_blitz?.record?.loss || 0) + (data.chess_blitz?.record?.draw || 0) +
-                                (data.chess_bullet?.record?.win || 0) + (data.chess_bullet?.record?.loss || 0) + (data.chess_bullet?.record?.draw || 0)}
-                        </span>
+                    <div className="flex flex-col gap-4">
+                        <div className="text-lg">
+                            Total games played across all formats: <span className="font-bold">
+                                {(stats.chess_rapid?.record?.win || 0) + (stats.chess_rapid?.record?.loss || 0) + (stats.chess_rapid?.record?.draw || 0) +
+                                    (stats.chess_blitz?.record?.win || 0) + (stats.chess_blitz?.record?.loss || 0) + (stats.chess_blitz?.record?.draw || 0) +
+                                    (stats.chess_bullet?.record?.win || 0) + (stats.chess_bullet?.record?.loss || 0) + (stats.chess_bullet?.record?.draw || 0)}
+                            </span>
+                        </div>
+                        <div className="flex gap-4 text-sm text-neutral-500 font-medium">
+                            <div className="flex items-center gap-2">
+                                <Zap className="h-3 w-3" />
+                                <span>Rapid: {(stats.chess_rapid?.record?.win || 0) + (stats.chess_rapid?.record?.loss || 0) + (stats.chess_rapid?.record?.draw || 0)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Flame className="h-3 w-3" />
+                                <span>Blitz: {(stats.chess_blitz?.record?.win || 0) + (stats.chess_blitz?.record?.loss || 0) + (stats.chess_blitz?.record?.draw || 0)}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Target className="h-3 w-3" />
+                                <span>Bullet: {(stats.chess_bullet?.record?.win || 0) + (stats.chess_bullet?.record?.loss || 0) + (stats.chess_bullet?.record?.draw || 0)}</span>
+                            </div>
+                        </div>
                     </div>
                 }
             />

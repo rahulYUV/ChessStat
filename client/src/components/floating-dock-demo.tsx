@@ -190,8 +190,8 @@ export default function FloatingDockDemo({ onPlayerSelect }: FloatingDockDemoPro
                 items={links2}
                 size="small"
             />
-            <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-4 text-center max-w-md">
-                Click on the profile to view their chess.com stats. They are my favorites, e.g. Magnus, Praggnanandhaa, Samay, Chahal, Ash Anna, Shiva Bhaiya.
+            <p className="text-neutral-500 dark:text-neutral-400 text-sm mt-4 text-center max-w-lg leading-relaxed">
+                An advanced analytics platform for Chess.com. Gain deep insights into player performance, analyze opening trends, and compare statistics with detailed visualizations. Select a pro to get started.
             </p>
         </div>
     );
