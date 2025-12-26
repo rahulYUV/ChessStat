@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Input } from "@/components/ui/input"
 import { Button as MovingButton } from "@/components/ui/moving-border"
 import {
@@ -22,8 +22,13 @@ import { FeedbackForm } from "@/components/feedback-form"
 import { StatsSkeleton } from "@/components/stats-skeleton"
 import { StatsReceipt } from "@/components/stats-receipt"
 import { WhatWeDo } from "@/components/what-we-do"
+import { HeroSection } from "@/components/hero-section"
+import { IntroAnimation } from "@/components/intro-animation"
+import { Shader3 } from "@/components/shader-footer"
+import { TeamSection } from "@/components/team-section"
 
 function App() {
+  const [showIntro, setShowIntro] = useState(true)
   const [username, setUsername] = useState("")
   const [username2, setUsername2] = useState("")
   const [mode, setMode] = useState("profile")
@@ -31,13 +36,25 @@ function App() {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [showJson, setShowJson] = useState(false)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
-    setData(null);
-    setError("");
+    if (username) {
+      fetchData();
+    } else {
+      setData(null);
+      setError("");
+    }
   }, [mode]);
 
   const fetchData = async (usernameOverride?: string) => {
+    // Abort previous request if is running
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     setError("")
     setData(null)
     const userToFetch = usernameOverride || username;
@@ -71,7 +88,7 @@ function App() {
           endpoint = `${apiUrl}/player/${userToFetch.trim()}/full`;
       }
 
-      const response = await fetch(endpoint)
+      const response = await fetch(endpoint, { signal: controller.signal })
       if (!response.ok) {
         let errorMessage = `Error: ${response.status} ${response.statusText}`;
         try {
@@ -88,12 +105,19 @@ function App() {
       setData(result)
     } catch (err: unknown) {
       if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          console.log('Fetch aborted');
+          return;
+        }
         setError(err.message)
       } else {
         setError("An unknown error occurred")
       }
     } finally {
-      setLoading(false)
+      // Only unset loading if this was the request that finished (not aborted)
+      if (abortControllerRef.current === controller) {
+        setLoading(false)
+      }
     }
   }
 
@@ -114,93 +138,86 @@ function App() {
 
   return (
     <GridBackground>
-      <div className="min-h-screen flex flex-col items-center pt-12 md:pt-24 p-4 space-y-8 text-foreground relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center space-y-2"
-        >
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-neutral-800 to-neutral-500 dark:from-neutral-200 dark:to-neutral-500">
-            Chess Stats
-          </h1>
-          <p className="text-muted-foreground text-sm md:text-base">
-            Dive deep into player stats, compare with others, and uncover key insights.
-          </p>
-        </motion.div>
+      <AnimatePresence mode="wait">
+        {showIntro && <IntroAnimation onComplete={() => setShowIntro(false)} />}
+      </AnimatePresence>
+      <div className="min-h-screen flex flex-col items-center pt-4 md:pt-12 p-4 space-y-8 text-foreground relative z-10">
+        <HeroSection />
 
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 0.4 }}
-          className="flex flex-col md:flex-row w-full max-w-3xl items-center gap-3 bg-white/50 dark:bg-black/50 backdrop-blur-md p-2 rounded-2xl border border-black/5 dark:border-white/10 shadow-lg"
+          className="relative w-full max-w-4xl mx-auto z-30"
         >
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-            <Input
-              type="text"
-              placeholder={mode === 'compare' ? "Username 1" : "Enter Chess.com username (e.g. praggnanandhaa)"}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              onKeyPress={handleKeyPress}
-              className="pl-10 h-12 bg-transparent border-transparent focus-visible:ring-0 text-base"
-            />
-          </div>
 
-          {mode === 'compare' && (
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <div className="relative flex flex-col md:flex-row items-center gap-2 bg-white dark:bg-neutral-900/90 backdrop-blur-xl p-1.5 rounded-2xl md:rounded-full border border-neutral-200 dark:border-neutral-800 shadow-2xl shadow-yellow-900/5">
+
+            {/* Input Section */}
+            <div className="relative flex-1 w-full md:w-auto">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-400 h-5 w-5" />
               <Input
                 type="text"
-                placeholder="Username 2"
-                value={username2}
-                onChange={(e) => setUsername2(e.target.value)}
+                placeholder={mode === 'compare' ? "Username 1" : "Enter Chess.com username..."}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className="pl-10 h-12 bg-transparent border-transparent focus-visible:ring-0 text-base"
+                className="pl-12 h-12 md:h-14 bg-transparent border-transparent focus-visible:ring-0 text-base md:text-lg rounded-full placeholder:text-neutral-400"
               />
             </div>
-          )}
 
-          <div className="h-8 w-[1px] bg-border hidden md:block" />
+            {mode === 'compare' && (
+              <>
+                <div className="hidden md:block w-[1px] h-8 bg-neutral-200 dark:bg-neutral-700 mx-1" />
+                <div className="relative flex-1 w-full md:w-auto">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-400 h-5 w-5" />
+                  <Input
+                    type="text"
+                    placeholder="Username 2"
+                    value={username2}
+                    onChange={(e) => setUsername2(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    className="pl-12 h-12 md:h-14 bg-transparent border-transparent focus-visible:ring-0 text-base md:text-lg rounded-full placeholder:text-neutral-400"
+                  />
+                </div>
+              </>
+            )}
 
-          <Select value={mode} onValueChange={setMode}>
-            <SelectTrigger className="h-12 w-full md:w-[200px] border-transparent bg-transparent focus:ring-0 text-base">
-              <SelectValue placeholder="Mode" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="profile">
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" /> Profile
-                </div>
-              </SelectItem>
-              <SelectItem value="stats">
-                <div className="flex items-center gap-2">
-                  <Activity className="h-4 w-4" /> Stats
-                </div>
-              </SelectItem>
-              <SelectItem value="compare">
-                <div className="flex items-center gap-2">
-                  <Swords className="h-4 w-4" /> Compare
-                </div>
-              </SelectItem>
-              <SelectItem value="insights">
-                <div className="flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4" /> Insights
-                </div>
-              </SelectItem>
-            </SelectContent>
-          </Select>
+            {/* Divider */}
+            <div className="hidden md:block w-[1px] h-8 bg-neutral-200 dark:bg-neutral-700 mx-1" />
 
-          <MovingButton
-            borderRadius="0.75rem"
-            onClick={() => fetchData()}
-            disabled={loading}
-            type="button"
-            className="bg-black dark:bg-white text-white dark:text-black border-neutral-200 dark:border-slate-800 font-semibold relative z-20"
-            containerClassName="h-12 w-full md:w-40"
-          >
-            {loading ? "Loading..." : "Analyze"}
-          </MovingButton>
+            {/* Select & Action Group */}
+            <div className="flex w-full md:w-auto items-center gap-2">
+              <Select value={mode} onValueChange={setMode}>
+                <SelectTrigger className="h-12 md:h-14 w-full md:w-[150px] border-transparent bg-transparent focus:ring-0 text-base font-medium text-neutral-600 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 rounded-full transition-colors">
+                  <SelectValue placeholder="Mode" />
+                </SelectTrigger>
+                <SelectContent align="end" className="rounded-xl border-neutral-200 dark:border-neutral-800 shadow-xl">
+                  <SelectItem value="profile"><div className="flex items-center gap-2"><User className="h-4 w-4" /> Profile</div></SelectItem>
+                  <SelectItem value="stats"><div className="flex items-center gap-2"><Activity className="h-4 w-4" /> Stats</div></SelectItem>
+                  <SelectItem value="compare"><div className="flex items-center gap-2"><Swords className="h-4 w-4" /> Compare</div></SelectItem>
+                  <SelectItem value="insights"><div className="flex items-center gap-2"><Lightbulb className="h-4 w-4" /> Insights</div></SelectItem>
+                </SelectContent>
+              </Select>
+
+              <MovingButton
+                borderRadius="9999px"
+                onClick={() => fetchData()}
+                disabled={loading}
+                type="button"
+                className="bg-neutral-900 dark:bg-black text-white border-none font-bold text-base tracking-wide hover:bg-neutral-800 transition-colors shadow-lg"
+                containerClassName="h-12 md:h-14 w-full md:w-32"
+                duration={3000}
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Thinking</span>
+                  </div>
+                ) : "Analyze"}
+              </MovingButton>
+            </div>
+          </div>
         </motion.div>
 
         {error && (
@@ -332,6 +349,7 @@ function App() {
                     <div className="bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-3xl p-1 border border-black/5 dark:border-white/5">
                       <StatsGrid data={data as PlayerData} />
                     </div>
+
                   </div>
                 </div>
               ) : (
@@ -395,6 +413,19 @@ function App() {
 
             <FeedbackForm />
           </div>
+
+          <div className="w-full relative overflow-hidden mt-12 border-t border-white/10 bg-neutral-950">
+            {/* Background Shader */}
+            <div className="absolute inset-0 z-0">
+              <Shader3 color="#000000" />
+            </div>
+
+            {/* Content on top */}
+            <div className="relative z-10 py-10">
+              <TeamSection className="py-0 lg:py-10" />
+            </div>
+          </div>
+
         </div>
       </div>
     </GridBackground >

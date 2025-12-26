@@ -51,6 +51,7 @@ export interface PlayerData {
         white: { username: string; result: string; rating: number };
         black: { username: string; result: string; rating: number };
         date: number;
+        end_time: number;
     }[];
     history?: { date: string; rating: number }[];
     [key: string]: any;

@@ -14,7 +14,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 const chessAPI = new ChessWebAPI();
-const cache = new NodeCache({ stdTTL: 3600 }); // Cache for 1 hour , rate limit protection 
+const cache = new NodeCache({ stdTTL: 86400 }); // Cache for 24 hours to improve performance 
 
 // middlewares 
 app.use(cors());
@@ -26,9 +26,13 @@ const MONGODB_URI = process.env.MONGODB_URI || "";
 if (!MONGODB_URI) {
     console.warn("MongoDB URI is missing. Comments will not be saved.");
 } else {
+    // Attempt to connect but catch errors gracefully to prevent crash
     mongoose.connect(MONGODB_URI)
         .then(() => console.log("Connected to MongoDB"))
-        .catch((err) => console.error("MongoDB connection error:", err));
+        .catch((err) => {
+            console.error("MongoDB connection failed (Server will verify run without DB):", err.message);
+            // We do NOT exit the process here, allowing the server to run in "offline" mode
+        });
 }
 
 const commentSchema = new mongoose.Schema({
@@ -435,10 +439,12 @@ app.get("/player/:id/insights", async (req: Request, res: Response) => {
             }
 
 
-            const last12Months = monthlyArchives.slice(-12);
+            // OPTIMIZATION: Only fetch last 3 months of data for speed.
+            // Fetching 12 months for active players is too slow (can be thousands of games).
+            const lastMonths = monthlyArchives.slice(-3);
 
 
-            const gamesResults = (await mapWithConcurrency(last12Months, 3, async (url: string) => {
+            const gamesResults = (await mapWithConcurrency(lastMonths, 5, async (url: string) => {
                 try {
                     const res = await fetch(url);
                     if (!res.ok) {
@@ -478,7 +484,7 @@ app.get("/player/:id/insights", async (req: Request, res: Response) => {
             };
             const summary = { wins: 0, loss: 0, draw: 0, total: 0 };
 
-            lastMonthGames.forEach((game: any) => {
+            allGames.forEach((game: any) => {
                 const dateObj = new Date(game.end_time * 1000);
                 const day = dateObj.getDay();
                 const hour = dateObj.getHours();
@@ -515,15 +521,17 @@ app.get("/player/:id/insights", async (req: Request, res: Response) => {
                         const opening = openingMatch[1];
 
                         const baseOpening = opening.split(':')[0].split(',')[0];
+                        // Create a unique key for Opening + Color (e.g. "London System-white")
+                        const key = `${baseOpening}|${isWhite ? 'white' : 'black'}`;
 
-                        if (!openingsCount[baseOpening]) {
-                            openingsCount[baseOpening] = { wins: 0, loss: 0, draw: 0, total: 0, color: isWhite ? 'white' : 'black' };
+                        if (!openingsCount[key]) {
+                            openingsCount[key] = { wins: 0, loss: 0, draw: 0, total: 0, color: isWhite ? 'white' : 'black' };
                         }
 
-                        openingsCount[baseOpening].total++;
-                        if (result === 'win') openingsCount[baseOpening].wins++;
-                        else if (['checkmated', 'resigned', 'timeout', 'abandoned'].includes(result)) openingsCount[baseOpening].loss++;
-                        else openingsCount[baseOpening].draw++;
+                        openingsCount[key].total++;
+                        if (result === 'win') openingsCount[key].wins++;
+                        else if (['checkmated', 'resigned', 'timeout', 'abandoned'].includes(result)) openingsCount[key].loss++;
+                        else openingsCount[key].draw++;
                     }
                 }
             });
@@ -536,7 +544,7 @@ app.get("/player/:id/insights", async (req: Request, res: Response) => {
             const sortedOpenings = Object.entries(openingsCount)
                 .sort(([, a], [, b]) => b.total - a.total)
                 .slice(0, 10)
-                .map(([name, stats]) => ({ name, ...stats }));
+                .map(([key, stats]) => ({ name: key.split('|')[0], ...stats }));
 
             const dailyActivityArray = Object.entries(dailyActivity).map(([date, count]) => ({ date, count }));
 
@@ -545,7 +553,8 @@ app.get("/player/:id/insights", async (req: Request, res: Response) => {
                 url: g.url,
                 white: { username: g.white.username, result: g.white.result, rating: g.white.rating },
                 black: { username: g.black.username, result: g.black.result, rating: g.black.rating },
-                date: g.end_time
+                date: g.end_time,
+                end_time: g.end_time
             }));
 
             return {

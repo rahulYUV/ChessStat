@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 
 import type { PlayerData } from "@/types";
 
-import OpeningExplorer from "./opening-explorer";
+import { OpeningStats } from "./opening-stats";
 
 interface InsightsViewProps {
     data: PlayerData;
@@ -190,66 +190,13 @@ export default function InsightsView({ data }: InsightsViewProps) {
                 </Card>
             </motion.div>
 
-            {/* Opening Explorer */}
+            {/* Opening Stats */}
             <motion.div variants={item}>
-                <OpeningExplorer games={data.games || []} username={data.username || ""} />
-            </motion.div>
-
-            <motion.div variants={item}>
-                <Card className="bg-white/40 dark:bg-neutral-900/40 backdrop-blur-sm border-none shadow-none">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <TrendingUp className="h-5 w-5 text-blue-500" />
-                            Top Openings Performance (Last Month)
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="hover:bg-transparent border-b border-black/5 dark:border-white/5">
-                                    <TableHead>Opening</TableHead>
-                                    <TableHead className="text-center">Games</TableHead>
-                                    <TableHead className="text-center w-[200px]">Win Rate</TableHead>
-                                    <TableHead className="text-center">W / L / D</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {openings.map((op: any, idx: number) => {
-                                    const winRate = Math.round((op.wins / op.total) * 100);
-                                    return (
-                                        <TableRow key={idx} className="hover:bg-black/5 dark:hover:bg-white/5 border-none">
-                                            <TableCell className="font-medium">
-                                                <div className="flex items-center gap-2">
-                                                    <Swords className="h-4 w-4 text-muted-foreground" />
-                                                    {op.name}
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-center font-mono">{op.total}</TableCell>
-                                            <TableCell className="text-center">
-                                                <div className="flex items-center gap-2">
-                                                    <div className="h-2 flex-1 bg-neutral-200 dark:bg-neutral-800 rounded-full overflow-hidden">
-                                                        <div
-                                                            className="h-full bg-green-500 rounded-full"
-                                                            style={{ width: `${winRate}%` }}
-                                                        />
-                                                    </div>
-                                                    <span className="text-xs font-bold w-8 text-right">{winRate}%</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="text-center text-xs font-mono">
-                                                <span className="text-green-600 font-bold">{op.wins}</span>
-                                                <span className="mx-1 text-muted-foreground">/</span>
-                                                <span className="text-red-500 font-bold">{op.loss}</span>
-                                                <span className="mx-1 text-muted-foreground">/</span>
-                                                <span className="text-muted-foreground">{op.draw}</span>
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                </Card>
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <Swords className="h-5 w-5 text-purple-500" />
+                    Opening Repertoire (Last 3 Months)
+                </h2>
+                <OpeningStats openings={openings} username={data.username} />
             </motion.div>
         </motion.div>
     );
