@@ -26,6 +26,8 @@ import { HeroSection } from "@/components/hero-section"
 import { IntroAnimation } from "@/components/intro-animation"
 import { Shader3 } from "@/components/shader-footer"
 import { TeamSection } from "@/components/team-section"
+import { PlayfulTodolist } from "@/components/playful-todolist"
+import { WallOfFame } from "@/components/wall-of-fame"
 
 function App() {
   const [showIntro, setShowIntro] = useState(true)
@@ -212,13 +214,16 @@ function App() {
                 {loading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Thinking</span>
+                    <span>Processing</span>
                   </div>
                 ) : "Analyze"}
               </MovingButton>
             </div>
           </div>
         </motion.div>
+
+        {/* Feature Checklist - Moved here as requested */}
+
 
         {error && (
           <motion.div
@@ -403,6 +408,12 @@ function App() {
         <div className="mt-auto w-full py-6 flex flex-col items-end gap-8 z-50 px-4 md:px-8">
           <div className="w-full flex justify-center">
             <FloatingDockDemo onPlayerSelect={handlePlayerSelect} />
+          </div>
+
+          {/* Checklist - Moved above 'Why Chess Stats?' */}
+          <div className="w-full flex flex-col items-center justify-center py-8 space-y-12">
+            <PlayfulTodolist />
+            <WallOfFame />
           </div>
 
           <div className="w-full">

@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 
+
+
 export function HeroSection() {
     // Corrected words to avoid redundancy with "Analyze & Compare"
     const words = ["Player", "Opening", "Rival", "Grandmaster"]
@@ -35,28 +37,43 @@ export function HeroSection() {
                             {/* Simple Black/White Text */}
                             <span className="relative z-10">
                                 Chess Statistics
+                                <svg className="absolute w-full h-[0.5em] -bottom-2 left-0 text-amber-500/60" viewBox="0 0 300 20" preserveAspectRatio="none">
+                                    <path d="M5 12 Q 50 -2 150 12 T 295 10" stroke="currentColor" strokeWidth="3" fill="none" strokeLinecap="round" />
+                                </svg>
                             </span>
                         </span>
                     </h1>
                 </div>
 
                 {/* Refining the Subheading - Clean Grey & Gold */}
-                <div className="flex flex-col md:flex-row items-center justify-center gap-1.5 text-lg md:text-xl text-neutral-500 dark:text-neutral-400 font-medium">
-                    <span>Analyze & Compare</span>
-                    <AnimatePresence mode="wait">
-                        <motion.span
-                            key={words[index]}
-                            initial={{ y: 10, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: -10, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                            className="font-bold text-amber-500 dark:text-amber-400 px-1"
-                        >
-                            {words[index]}
-                        </motion.span>
-                    </AnimatePresence>
-                    <span>statistics instantly.</span>
+                <div className="flex flex-col items-center justify-center gap-8 text-center w-full">
+                    <p className="max-w-xl text-neutral-500 dark:text-neutral-400 text-lg leading-relaxed">
+                        An advanced analytics platform for Chess.com. Gain deep insights into player performance, analyze opening trends, and compare statistics with detailed visualizations. Select a pro to get started.
+                    </p>
+
+
+
+
+
+                    <div className="flex flex-col md:flex-row items-center justify-center gap-1.5 text-lg md:text-xl text-neutral-500 dark:text-neutral-400 font-medium opacity-80 scale-90 pt-8">
+                        <span>Analyze & Compare</span>
+                        <AnimatePresence mode="wait">
+                            <motion.span
+                                key={words[index]}
+                                initial={{ y: 10, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: -10, opacity: 0 }}
+                                transition={{ duration: 0.3 }}
+                                className="font-bold text-amber-500 dark:text-amber-400 px-1"
+                            >
+                                {words[index]}
+                            </motion.span>
+                        </AnimatePresence>
+                        <span>statistics instantly.</span>
+                    </div>
                 </div>
+
+
             </motion.div>
         </div>
     )

@@ -22,27 +22,33 @@ const ShaderPlane = ({
     const mousePos = useRef({ x: 0, y: 0 });
     const targetPos = useRef({ x: 0, y: 0 });
 
+
+
     useEffect(() => {
-        const handleMouseMove = (event: MouseEvent) => {
+        const handlePointerMove = (event: PointerEvent | MouseEvent) => {
+            if (window.innerWidth === 0 || window.innerHeight === 0) return;
             targetPos.current.x = (event.clientX / window.innerWidth) * 2 - 1;
             targetPos.current.y = -(event.clientY / window.innerHeight) * 2 + 1;
         };
 
-        window.addEventListener("mousemove", handleMouseMove);
-        return () => window.removeEventListener("mousemove", handleMouseMove);
+        window.addEventListener("pointermove", handlePointerMove);
+        return () => window.removeEventListener("pointermove", handlePointerMove);
     }, []);
 
     useFrame((state) => {
-        if (meshRef.current) {
+        if (meshRef.current && meshRef.current.material) {
             const material = meshRef.current.material as THREE.ShaderMaterial;
-            material.uniforms.u_time.value = state.clock.elapsedTime * 0.5;
+
+            // Use absolute time to guarantee flow
+            material.uniforms.u_time.value = performance.now() / 1000.0;
+
             material.uniforms.u_resolution.value.set(size.width, size.height, 1.0);
 
-            const lerpFactor = 0.025;
-            mousePos.current.x +=
-                (targetPos.current.x - mousePos.current.x) * lerpFactor;
-            mousePos.current.y +=
-                (targetPos.current.y - mousePos.current.y) * lerpFactor;
+            // Smooth Interpolation (Premium Feel)
+            const lerpFactor = 0.1;
+            mousePos.current.x += (targetPos.current.x - mousePos.current.x) * lerpFactor;
+            mousePos.current.y += (targetPos.current.y - mousePos.current.y) * lerpFactor;
+
             material.uniforms.u_mouse.value.set(
                 mousePos.current.x,
                 mousePos.current.y,
@@ -50,13 +56,8 @@ const ShaderPlane = ({
                 0.0,
             );
 
-            // Dynamic Color Change on Mouse Move
-            // Map x from [-1, 1] to [0, 1] for Hue
-            // const hue = (mousePos.current.x + 1) * 0.5;
-
-            // Fixed Green Color ("jo utha hua h")
+            // Fixed Green Color
             const hue = 0.35; // Green
-            // You can tweak saturation/lightness (0.8, 0.6) for vibrancy
             material.uniforms.u_color.value.setHSL(hue, 1.0, 0.5);
         }
     });
@@ -239,10 +240,17 @@ const Shader3 = ({
 
     void mainImage( out vec4 fragColor, in vec2 fragCoord )
     {
-        vec2 uv = fragCoord / R.xy;
-        vec2 p = (fragCoord/R.xy-.5)*vec2(R.x/R.y,1.)*2.;
+        // Safe division to avoid NaN if Resolution is 0
+        vec2 safeR = max(R.xy, vec2(1.0, 1.0));
+        vec2 uv = fragCoord / safeR;
+        vec2 p = (fragCoord/safeR-.5)*vec2(safeR.x/safeR.y,1.)*2.;
+        
+        // Make the animation move with mouse
+        // p -= u_mouse.xy * 0.50; // REMOVED PAN in favor of rotation below for visibility
 
-        float angle = PI / 4.0;
+        // Robust Sway
+        float timeSway = sin(u_time * 0.5) * 0.2; 
+        float angle = PI / 4.0 + timeSway + (u_mouse.x * 1.0);
         float cosA = cos(angle);
         float sinA = sin(angle);
         vec2 rotatedP = vec2(
@@ -299,10 +307,17 @@ const Shader3 = ({
     className = "absolute inset-0 w-full h-full",
     color = "#bbffcc",
 }: ShaderBackgroundProps) => {
+    // Safe initialization with current window size or fallback to prevent 0,0,0
     const shaderUniforms = useMemo(
         () => ({
-            u_time: { value: 0 },
-            u_resolution: { value: new THREE.Vector3(1, 1, 1) },
+            u_time: { value: 0.0 },
+            u_resolution: {
+                value: new THREE.Vector3(
+                    typeof window !== 'undefined' ? window.innerWidth : 100,
+                    typeof window !== 'undefined' ? window.innerHeight : 100,
+                    1.0
+                )
+            },
             u_mouse: { value: new THREE.Vector4(0, 0, 0, 0) },
             u_color: { value: new THREE.Color(color) },
             ...uniforms,
@@ -311,11 +326,11 @@ const Shader3 = ({
     );
 
     return (
-        <section className={cn("relative overflow-hidden", className)}>
+        <div className={cn("h-full w-full bg-neutral-900", className)}>
             <Canvas
                 frameloop="always"
-                camera={{ position: [0.0, 0.0, 1.0] }}
-                style={{ width: "100%", height: "100%" }}
+                camera={{ position: [0, 0, 1] }}
+                style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
             >
                 <ShaderPlane
                     vertexShader={vertexShader}
@@ -323,7 +338,7 @@ const Shader3 = ({
                     uniforms={shaderUniforms}
                 />
             </Canvas>
-        </section>
+        </div>
     );
 };
 
