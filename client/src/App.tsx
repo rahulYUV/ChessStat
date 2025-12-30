@@ -1,4 +1,16 @@
+/**
+ * App.tsx
+ * Main entry point for the Chess Stats Application Client.
+ * Handles routing, main page logic, state management for user lookups,
+ * and renders the primary UI layout.
+ */
+
 import { useState, useEffect, useRef } from 'react'
+import { Routes, Route } from "react-router-dom"
+import { motion, AnimatePresence } from "motion/react"
+import { Search, ChevronDown, ChevronUp, User, Activity, Swords, Lightbulb } from "lucide-react"
+
+// --- UI Components ---
 import { Input } from "@/components/ui/input"
 import { Button as MovingButton } from "@/components/ui/moving-border"
 import {
@@ -8,37 +20,48 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import FloatingDockDemo from "@/components/floating-dock-demo"
+import { GridBackground } from "@/components/ui/grid-background"
+
+// --- Custom Components ---
 import StatsGrid from "@/components/stats-grid"
 import ComparisonView from "@/components/comparison-view"
 import InsightsView from "@/components/insights-view"
-import { GridBackground } from "@/components/ui/grid-background"
-import { motion, AnimatePresence } from "motion/react"
-import { Search, ChevronDown, ChevronUp, User, Activity, Swords, Lightbulb } from "lucide-react"
-import type { PlayerData, ComparisonData } from "@/types"
-import AvatarGroupPopularityIndicatorDemo from "@/components/shadcn-studio/avatar/avatar-21"
 import ChartAreaInteractive from "@/components/chart-area-interactive"
 import { FeedbackForm } from "@/components/feedback-form"
 import { StatsSkeleton } from "@/components/stats-skeleton"
 import { StatsReceipt } from "@/components/stats-receipt"
 import { WhatWeDo } from "@/components/what-we-do"
+import { WallOfFame } from "@/components/wall-of-fame"
 import { HeroSection } from "@/components/hero-section"
 import { IntroAnimation } from "@/components/intro-animation"
 import { Shader3 } from "@/components/shader-footer"
 import { TeamSection } from "@/components/team-section"
 import { PlayfulTodolist } from "@/components/playful-todolist"
-import { WallOfFame } from "@/components/wall-of-fame"
+import { Navbar } from "@/components/Navbar"
+import { AuthCallback } from "@/components/AuthCallback"
+import { ProfilePage } from "@/components/ProfilePage"
+import FloatingDockDemo from "@/components/floating-dock-demo"
 
-function App() {
-  const [showIntro, setShowIntro] = useState(true)
-  const [username, setUsername] = useState("")
-  const [username2, setUsername2] = useState("")
-  const [mode, setMode] = useState("profile")
-  const [data, setData] = useState<PlayerData | ComparisonData | null>(null)
-  const [error, setError] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [showJson, setShowJson] = useState(false)
-  const abortControllerRef = useRef<AbortController | null>(null)
+// --- Types ---
+import type { PlayerData, ComparisonData } from "@/types"
+
+/**
+ * Home Component
+ * The landing page of the application.
+ * Manages the search input, comparison mode, data fetching, and displays
+ * the relevant statistical views (Profile, Stats, Compare, Insights).
+ */
+function Home() {
+  // --- State Management ---
+  const [showIntro, setShowIntro] = useState(true) // Controls the initial splash screen
+  const [username, setUsername] = useState("") // Primary user search query
+  const [username2, setUsername2] = useState("") // Secondary user for comparison
+  const [mode, setMode] = useState("profile") // Current value of the mode selector
+  const [data, setData] = useState<PlayerData | ComparisonData | null>(null) // Fetched API data
+  const [error, setError] = useState("") // UI error messages
+  const [loading, setLoading] = useState(false) // Loading indicator state
+  const [showJson, setShowJson] = useState(false) // Toggle for raw JSON debug view
+  const abortControllerRef = useRef<AbortController | null>(null) // To cancel in-flight requests
 
   useEffect(() => {
     if (username) {
@@ -49,6 +72,11 @@ function App() {
     }
   }, [mode]);
 
+  /**
+   * Fetches player data from the API based on the selected mode and usernames.
+   * Handles request cancellation to prevent race conditions.
+   * @param usernameOverride - Optional username to fetch directly (used for direct selection)
+   */
   const fetchData = async (usernameOverride?: string) => {
     // Abort previous request if is running
     if (abortControllerRef.current) {
@@ -140,10 +168,11 @@ function App() {
 
   return (
     <GridBackground>
+      <Navbar />
       <AnimatePresence mode="wait">
         {showIntro && <IntroAnimation onComplete={() => setShowIntro(false)} />}
       </AnimatePresence>
-      <div className="min-h-screen flex flex-col items-center pt-4 md:pt-12 p-4 space-y-8 text-foreground relative z-10">
+      <div className="min-h-screen flex flex-col items-center pt-20 md:pt-24 p-4 space-y-8 text-foreground relative z-10">
         <HeroSection />
 
         <motion.div
@@ -221,9 +250,6 @@ function App() {
             </div>
           </div>
         </motion.div>
-
-        {/* Feature Checklist - Moved here as requested */}
-
 
         {error && (
           <motion.div
@@ -354,7 +380,13 @@ function App() {
                     <div className="bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm rounded-3xl p-1 border border-black/5 dark:border-white/5">
                       <StatsGrid data={data as PlayerData} />
                     </div>
-
+                    {/* Add Chart here for Profile Mode too if data available */}
+                    {(data as PlayerData).history && (data as PlayerData).history!.length > 0 && (
+                      <ChartAreaInteractive
+                        data={(data as PlayerData).history!.map(h => ({ date: h.date, player1: h.rating }))}
+                        p1Name={(data as PlayerData).username}
+                      />
+                    )}
                   </div>
                 </div>
               ) : (
@@ -410,7 +442,6 @@ function App() {
             <FloatingDockDemo onPlayerSelect={handlePlayerSelect} />
           </div>
 
-          {/* Checklist - Moved above 'Why Chess Stats?' */}
           <div className="w-full flex flex-col items-center justify-center py-8 space-y-12">
             <PlayfulTodolist />
             <WallOfFame />
@@ -421,17 +452,13 @@ function App() {
           </div>
 
           <div className="flex flex-col gap-2 items-end">
-
             <FeedbackForm />
           </div>
 
           <div className="w-full relative overflow-hidden mt-12 border-t border-white/10 bg-neutral-950">
-            {/* Background Shader */}
             <div className="absolute inset-0 z-0">
               <Shader3 color="#000000" />
             </div>
-
-            {/* Content on top */}
             <div className="relative z-10 py-10">
               <TeamSection className="py-0 lg:py-10" />
             </div>
@@ -440,6 +467,16 @@ function App() {
         </div>
       </div>
     </GridBackground >
+  )
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/profile" element={<ProfilePage />} />
+      <Route path="/auth/callback" element={<AuthCallback />} />
+    </Routes>
   )
 }
 
